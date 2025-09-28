@@ -1,7 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt 
-import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  
 import random as rd
 import math 
 def pregunta_1(n=1000):
