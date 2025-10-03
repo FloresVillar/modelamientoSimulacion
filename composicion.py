@@ -1,6 +1,5 @@
 import numpy as np 
 import random as rd 
-import permutacion
 
 def max_entero(num):
     cadena =str(num)
@@ -9,30 +8,25 @@ def max_entero(num):
     print(cadena)
     e = int(cadena[0])
     return e
- 
-def ejemplo4e(N=2000,c=1.2):
-    """
-       q = 1/10  conocida
-    """
-    p = np.array([0.11, 0.12, 0.09,0.08, 0.12, 0.10, 0.09, 0.09, 0.10, 0.10])
-    print(len(p))
-    q = np.zeros(len(p))/len(p)
-    print(q)
-    q[0:]=1/10
-    print(q)
-    X = []
-    print(X)
-    print(p)
-    print(sum(p))
+
+def ejemplo4f(N = 5000):
+    p =[0.05,0.05,0.05,0.05,0.05,0.15,0.15,0.15,0.15,0.15]
+    # p1j = 0.1 para j 1→10
+    #p2j = 0.3 para j 6→10    y  0 para j 1→5
+    #multiplicando  con alpha= 0.5
+    # pj = 0.1 * alpha + 0*0.3  = 0.05    para j 1→5
+    # pj = 0.1*0.5 + 0.5*0.3 =0.15    para j 6→10
+    n1 = 10 ; n2 = 5
+    X =[]
     for i in range(N):
         U1 = rd.uniform(0,1)
-        n = len(p)
-        Y = max_entero(n*U1) + 1 
-        U = rd.uniform(0,1)
-        regla = p[Y -1]/(c*q[Y -1])
-        print(f"regla:{regla}")
-        if U<=regla:
-            X.append(Y) 
+        U2 = rd.uniform(0,1)
+        if(U1<0.5):
+            X1 = max_entero(n1*U2) + 1
+            X.append(X1)
+        else:
+            X2 = max_entero(n2*U2) + 6 
+            X.append(X2)
     print(X)
     X_cuenta =[0,0,0,0,0,0,0,0,0,0]
     for x in X:
@@ -52,4 +46,4 @@ def ejemplo4e(N=2000,c=1.2):
     print(f"p={p}")
     print(f"X_relativa={X_f_relativa}")
 if __name__=='__main__':
-    ejemplo4e()
+    ejemplo4f()

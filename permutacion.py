@@ -17,7 +17,7 @@ def permutacion(n=10):
         P.append(i)
     #print(P)
     k = n-1
-    while(k>1):
+    while(k>0):
         U = rd.uniform(0,1)
         print(U)
         print(U*k)

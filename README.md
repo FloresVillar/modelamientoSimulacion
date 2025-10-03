@@ -121,32 +121,61 @@ Pero en lugar de usar los numeros , lo que se hace es usar el indice de la lista
 3. generar i = Ent(kU) + 1
 4 .Pi←→Pk
 5  k ← k-1  si k>1 ir a paso 3
-6. permutacion deseada 
+6. permutacion deseada1 
 ```
 
 
 
 ## Metodo aceptacion-rechazo
-que se busca? se tiene una distribucion de probabilidad,con sus propiedades , sus funciones de masa, suma <br>
-*p=[p1,p 2,...]* <br>
-y se quiere  obtener(simular) la variable aleatoria que corresponda a esa distribucion .
-<br>Pero usualmente la distribucion es dificil , entonces como generamos esos valores: 
-1. nos valemos de una conocida , q(x) de modo que este "cubra" a p(x) para todo x.Esto es que existirá c de modo que :
-    ``p(x) <= c * q(x)``  por que asi ?
-    pues si vemos las barras de p son dificiles , pero las barras de q son faciles , conocidas, entonces c*g(x) esta por encima de las barras de p , conteniendola por completo entonces , osea tenemos una variable aleatoria y su distribucion de probabilidad contendiendo a conteniendo a p de modo que podemos trabajar para hallar sus x
-2. 
-    lo anterior fue el prerequisito  o la condicion matematica, por decirlo de algun modo 
-    -simular Y es decir obtner de forma aleatoria ese Y, del conjutno de valores de la variable aleatoria, Y ~ q  
-    - ahora ,tenemos la condicion y generamos un Y , ahora usaremos ese Y y un MECANISMO DE ACEPTACION "moneda" para decidir si ese Y corresponde a y~p como ? ? 
-    generamos un U uniforme,
-    y queremos un algoritmo que produzca valores con distribucion p(x),el algoritmo devuelve x con una probabilidad p(x)
+Que se busca?<br>
+Se tiene una distribucion de probabilidad,con sus propiedades , sus funciones de masa, suma *p=[p1,p 2,...] = 1 * <br>
+Y se quiere  obtener(simular) la variable aleatoria que corresponda a esa distribucion.<br>
+Pero usualmente la distribucion que tenemos es dificil , entonces como generamos esos valores?
 
-    entonces se genera Y  q(x) entonces podemos aceptar o rechazar Y con probabilidad a(Y) 
-    P(salida = x) = q(x) a(x)
-    porque esta formula ? pues para que la salida sea x debe cumplirse
-    Ex = {Y=x} {U<=a(x)}
+1. Nos valemos de una conocida , q(x) de modo que este "cubra" a p(x) para todo x.Esto es que existirá c de modo que : ``p(x) <= c * q(x)``  por que asi ?
+pues si vemos las barras de p son dificiles , pero las barras de q son faciles , conocidas, entonces c*g(x) esta por encima de las barras de p , conteniendola por completo entonces<br>
+Osea tenemos una variable aleatoria y su distribucion de probabilidad contendiendo a conteniendo a p de modo que podemos trabajar para hallar sus x.
+
+2. Lo anterior fue el prerequisito  o la condicion matematica, por decirlo de algun modo 
+- Simular Y, es decir, obtener de forma aleatoria ese Y, del conjunto de valores de la variable aleatoria, Y ~ q.<br>
+Esto es que,tenemos la condicion y generamos un Y , ahora usaremos ese Y y un MECANISMO DE ACEPTACION ("moneda") para decidir si ese Y corresponde a Y~p  o no<br>
+como ??? <br>
+-  La regla de aceptacion es ``U <= a(Y)`` entonces aceptas y haces X=Y
+A ver esta regla tambien es una "propuesta" similar a la constuccion hecha para la transformada inversa.<br>
+La regla es a(x)= ?  debe funcionar de modo que P(salida=x) DP p(x)<br>
+Ver que el evento de que el algoritmo devuelva x es :<br>
+Ex = {Y=x} y {U<=a(x)}<br>
+tomando la probabilidad conjunta y como  Y y U son independientes<br>
+P(salida = x) = P(Y=x y U<=a(x))<br> 
+P(salida = x) = P(Y=x) P(U<=a(x))<br>
+P(salida = x) = q(x) a(x)   ↑ U es uniforme
+→ entonce necesitamos un a() de modo que P(salida =x) sea proporcional p()<br>
+si hacemos a() = p()/cq() y reemplazamos<br>
+P(Salida=x) = q(x) p(x) / c q(x)
+            = p(x)/c <br>
+Entonces ``U<= p(Y)/c q(Y)`` es la regla buscada.
 
 
 
 
-
+## Metodo de composicion
+Supongamos que tenemos un metodo eficiente para generar (simular) el valor de una variable aleatoria con una de las dos funciones de masa de probabilidad 
+```bash
+{p1j, j>= 0}  {p2j, j>=0}
+```
+y queremos simular el valor de la variable aleatoria X con funcion de masa 
+```bash
+P(X=j) = alphap1j + (1 - alpha)p2j   j>=0
+```
+Entonces si X1 tiene funcion de masa p1j y X2 tiene funcion de masa p2j<br>
+Definimos :
+```bash
+   X1 con probabilidad alpha
+X =
+   X2 con probabilidad 1 - alpha
+```
+tendra su funcion de masa ``P(X=j) = alphap1j + (1 - alpha)p2j``
+Esto implica que para generar el valor de tal variable aleatorio<br>
+Primero generamos generamos una U y luego <br>
+un valor de X1 si U < alpha <br>
+y de X2 si U > alpha
