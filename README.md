@@ -9,7 +9,7 @@ u cnado x→ infinito  y =1
 
 
 # pregunta 2
-
+# CASO DISCRETA
 ## Transformada inversa caso continuo
 Tenemos la funcion de masa `
 ``P(X=xj) = pj ``osea la probabilidad que de que X sea xj para cada j  , y como P es funcion de masa funcion de probabilidad : SUMA pj = 1<br>
@@ -179,3 +179,11 @@ Esto implica que para generar el valor de tal variable aleatorio<br>
 Primero generamos generamos una U y luego <br>
 un valor de X1 si U < alpha <br>
 y de X2 si U > alpha
+
+
+# CASO CONTINUO
+## Transformada inversa
+Sea una variable aleatorio uniforme en (0,1) . Para cualquier funcion de distribucion continua F , es invertible, la variable aleatoria  X <br>
+X = F^-1(U) tiene distribucion F <br>
+F^-1 se define como el valor de x tal que F(x) =u
+
