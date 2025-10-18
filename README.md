@@ -183,7 +183,8 @@ y de X2 si U > alpha
 
 # CASO CONTINUO
 ## Transformada inversa
-Sea una variable aleatorio uniforme en (0,1) . Para cualquier funcion de distribucion continua F , es invertible, la variable aleatoria  X <br>
+```bash
+Sea una variable aleatorio uniforme en (0,1) . Para cualquier funcion de distribucion continua F invertible, la variable aleatoria  X <br>
 X = F^-1(U) tiene distribucion F <br>
 F^-1 se define como el valor de x tal que F(x) =u
-
+```
