@@ -2,7 +2,8 @@ import sys
 import numpy as np 
 import random as rd 
 import matplotlib.pyplot as plt 
-
+import math 
+from time import time_ns
 def factorial(n=5)->int:
     if n < 0:
         return -1
@@ -352,6 +353,257 @@ def ejercicio12_capitulo3(secuencias = 100):
     THETA = suma /len(N)
     print(f"la esperanza={THETA}")
 
+def generar_aleatorio(m = 2**35-31 , a = 5**5 , c = 100000007,semilla =167,N=100)->list:
+    # u = (a*semilla + c)mod  m
+    u  = (a * semilla + c) % m
+    U = []
+    U.append(u)
+    for i in range(1,N):
+        u = ( a * U[-1] + c) % m
+        U.append(u)
+    for i in range(len(U)):
+        U[i] = U[i]/m
+    #print(f"U  = {U}")
+    return U 
+
+def capitulo4_ejemplo4a(n=1000):
+    p = [.2,.15,.25,.4]
+    px = [1,2,3,4]
+    F = []
+    for i in range(len(p)):
+        suma = 0
+        for j in range(i):
+            suma = suma + p[j]
+        F.append(suma + p[i])
+    print(f"F : {F}")
+    X = []
+    U = generar_aleatorio(N=n)
+    print(f"U dentro de ejemplo4a {U}")
+    for i in range(len(U)):
+        if U[i] < F[0]:
+            X.append(px[0])
+        for j in range(1,len(F)):
+            if(F[j-1] <= U[i] < F[j]):
+                X.append(px[j])
+    #print(f"X : {X}")
+    h = {"uno":0,"dos":0,"tres":0,"cuatro":0}   
+    for e in X:
+        match e:
+            case 1:
+                h["uno"]=h["uno"]+1
+            case 2:
+                h["dos"]=h["dos"]+1
+            case 3:
+                h["tres"]=h["tres"]+1
+            case 4:
+                h["cuatro"]=h["cuatro"]+1
+            case _:
+                print()
+    f = np.array(list(h.values()))
+    plt.subplot(1,2,1);plt.bar(px,f)
+    f = f/len(X)
+    plt.subplot(1,2,2);plt.bar(px,f)
+    plt.show()
+
+def ejemplo4b(n=10):
+    P = []
+    for i in range(n):
+        P.append(i+1)
+    u = generar_aleatorio(semilla= 1007, N=n)
+    for k in range(n-1,-1,-1):
+        U = u[k] 
+        I = math.floor(k*U) + 1 # indices
+        tmp = P[k]
+        P[k] = P[I]
+        P[I] = tmp 
+    print(f"P: {P}")
+    # si queremos sibconjunto de r r<=n/2 generamos el subconjunto
+    # si r>  n/2 geramos subconjunto de n-r y el buscado seria el complemento
+
+def seleccion_subconjunto_prueba_medica(N=5,n=20):
+    r = int(n/2)
+    P = [i+1 for i in range(n)]
+    for i in range(N):
+        u = generar_aleatorio(semilla =123+i*1000003,N=n)
+        SUB = []
+        for k in range(n-1,-1,-1):
+            U = u[k]
+            I = math.floor(k*U) 
+            tmp = P[k]
+            P[k] = P[I]
+            P[I] = tmp 
+            SUB.append(P[k])
+            if len(SUB) == r:
+                break
+        print(SUB)
+# corregirr el hecho de que nunca se escoge a posicion 0(1)    
+
+def ejemplo4c(n = 50):
+    #Suma a(i)/n   n grande
+    u = generar_aleatorio(semilla = 23467, N=n)
+    a = lambda i :e**i
+    suma = 0
+    P = [i for i in range(n)]
+    k = 35
+    A = []
+    for i in range(n-1,-1,-1):
+        I = math.floor(n*u[i])
+        tmp = P[i]
+        P[i] = P[I]
+        P[I] = tmp
+        A.append(P[i])
+        if len(A) == k: break 
+    A = np.array(A)
+    promedio = sum(A)/len(A)
+    print(f"promedio: {promedio}")
+
+def ejemplo4d(n=20):
+    # generando una geometrica
+    p = .2
+    q = .8
+    u = generar_aleatorio(semilla = 867, N=20)
+    P = [i for i in range(n)]
+    for k in range(n-1,-1,-1):
+        I = math.floor(k*u[k])+ 1
+        tmp = P[k]
+        P[k] = P[I]
+        P[I] = tmp
+    ind = P[n-1]
+    U = rd.uniform(0,1)
+    j = math.floor(math.log(U)/math.log(q)) + 1 
+    print(f"intentos hasta el primer exito: {j}")
+    
+def generar_un_aleatorio(m=2**35-31,a=5**5,c=100000007):
+    N = 1000
+    seed = time_ns()
+    U = (a * seed + c ) % m
+    u = []
+    u.append(U)
+    for i in range(N):
+        Ui = (u[-1] * a + c) % m
+        u.append(Ui)
+    u = np.array(u)
+    u = u/m
+    P = [i for i in range(N)]
+    for k in range(N-1,-1,-1):   
+        Y = math.floor(k*u[k])
+        tmp = P[Y]
+        P[Y] = P[k]
+        P[k] = tmp    
+    return u[P[-1]]
+
+def generacion_poisson42():
+    # Pi+1 = Pi lambda/(i+1) 
+    X = []
+    l = 3
+    p = e**(-l)
+    i = 0
+    F = p
+    while(True):
+        U = generar_un_aleatorio()
+        print(f"i: {i} ,U: {U} , F: {F}")
+        if(U < F):
+            X.append(i)
+            break
+        p = l*p/(i+1)
+        F = F + p 
+        i = i + 1
+    print(X) 
+# generrar 100 veces calcular las frecuencias relativas  y esa se aproxima a la p(X=xi)
+
+def generacion_binomial43():
+    # P(X=i+1) = n-i/(i+1)P(X=i)p/(1-p) 
+    p = 0.2
+    n = 10
+    c = p/(1-p)
+    pr =(1-p)**n
+    F = pr
+    X = []
+    i = 0
+    while(True):
+        U = generar_un_aleatorio()
+        print(f"i: {i} ,U: {U} , F: {F}")
+        if U < F:
+            X.append(i)
+            break
+        pr = c*pr*(n-i)/(i+1)
+        F = F +pr 
+        i = i + 1
+    print(X)
+
+def ejemplo4e_aceptacion_rechazo(N=5000):
+    X = []
+    p = [0.11 , 0.12, 0.09 , 0.08 , 0.12 , 0.10, 0.09, 0.09, 0.1 , 0.1]
+    p = np.array(p)
+    #print(sum(p))
+    q = [1/10 for i in range(10)]
+    print(q)
+    c =  -1 
+    for i in range(len(p)):
+        if(p[i]/q[i] > c): 
+            c = p[i]/q[i]
+    print(c)
+    for i in range(N):
+        while True:
+            U1 = generar_un_aleatorio()
+            # F(j-1)< = U <F(j) → (j-1)/10<=U<F(j) → j-1 <= 100*U<j ent(10U) + 1
+            Y = math.floor(10*U1) + 1
+            U2 = generar_un_aleatorio()
+            if U2 <=p[Y-1]/(c*q[Y-1]): 
+                X.append(Y)
+                break
+    print(X)
+    X = np.array(X)
+    f = [0 for i in range(len(p))]
+    for e in X:
+        for i in range(1,11):
+            if i == e:
+                f[e-1] = f[e-1] + 1
+                break
+    f = np.array(f)
+    f = f/N
+    print(f"p: {p}")
+    print(f"f: {f}")
+    x = [i for i in range(1,11) ]
+    plt.subplot(1,2,1);plt.bar(x,p)
+    plt.subplot(1,2,2);plt.bar(x,f)
+    plt.show()
+
+def ejemplo4f_composicion(N=20): 
+    alpha = 0.5
+    p = [0.05,0.05,0.05,0.05,0.05,0.15,0.15,0.15,0.15,0.15]
+    p1 = [1/10 for i in range(len(p))] # j-1/10 <= U< j/10
+    p2 = [0,0,0,0,0,.2,.2,.2,.2,.2]  # (j-1)/5 <=U < j/5
+    #pj = 0.5*0.1 = 0.05....j:1→5    alpha =0.5  p1=0.1
+    # pj = 0.5*0.1 + 0,5*0.2 = 0.15 j:6→10    p1=0.1   p2=0.2 
+    #teniendo las composiciones y viendo que cada p sumple suma=1
+    X = []
+    for i in range(N):
+        U1 = generar_un_aleatorio()
+        U2 = generar_un_aleatorio()
+        if U1 < alpha :
+            Y = math.floor(10*U1) + 1
+            X.append(Y)
+        else:
+            Y = math.floor(5*U2) + 6
+            X.append(Y)
+    print(X)
+    X = np.array(X)
+    f = [0 for i in range(len(p))]
+    for e in X:
+        for i in range(1,11):
+            if i == e:
+                f[e-1] = f[e-1] + 1
+                break
+    f = np.array(f)
+    f = f/N
+    print(f"p: {p}")
+    print(f"f: {f}")
+    x = [i for i in range(1,11) ]
+    plt.subplot(1,2,1);plt.bar(x,p)
+    plt.subplot(1,2,2);plt.bar(x,f)
+    plt.show()
+
 if __name__=='__main__':
     """n = int(sys.argv[1])
     print(f"fac({n}) = {factorial(n)}")
@@ -373,6 +625,17 @@ if __name__=='__main__':
     ejercicio7_capitulo3(n)
     ejercicio8_capitulo3(n)
     ejercicio9_capitulo3(n)"""
-    n = int(sys.argv[1])
+    #n = int(sys.argv[1])
     #ejercicio10_capitulo3(n)
-    ejercicio12_capitulo3(n)
+    #ejercicio12_capitulo3(n)
+    #print(f"en main U  = {generar_aleatorio()}")
+    #capitulo4_ejemplo4a()
+    #ejemplo4b()
+    #seleccion_subconjunto_prueba_medica()
+    #ejemplo4c()
+    #ejemplo4d() 
+    #generacion_poisson42()
+    #generacion_binomial43()
+    #ejemplo4e_aceptacion_rechazo()
+    #print(generar_un_aleatorio())+
+    ejemplo4f_composicion()
