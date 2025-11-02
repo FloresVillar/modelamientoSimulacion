@@ -475,7 +475,7 @@ def ejemplo4d(n=20):
     
 def generar_un_aleatorio(m=2**35-31,a=5**5,c=100000007):
     N = 1000
-    seed = time_ns()
+    seed = (time_ns()*104729)%m
     U = (a * seed + c ) % m
     u = []
     u.append(U)
@@ -484,13 +484,14 @@ def generar_un_aleatorio(m=2**35-31,a=5**5,c=100000007):
         u.append(Ui)
     u = np.array(u)
     u = u/m
-    P = [i for i in range(N)]
+    return float(u[-1])
+    """P = [i for i in range(N)]
     for k in range(N-1,-1,-1):   
         Y = math.floor(k*u[k])
         tmp = P[Y]
         P[Y] = P[k]
         P[k] = tmp    
-    return u[P[-1]]
+    return u[P[-1]]"""
 
 def generacion_poisson42():
     # Pi+1 = Pi lambda/(i+1) 
@@ -569,9 +570,9 @@ def ejemplo4e_aceptacion_rechazo(N=5000):
     plt.subplot(1,2,2);plt.bar(x,f)
     plt.show()
 
-def ejemplo4f_composicion(N=20): 
+def ejemplo4f_composicion(N=100000): 
     alpha = 0.5
-    p = [0.05,0.05,0.05,0.05,0.05,0.15,0.15,0.15,0.15,0.15]
+    p = [0.05,0.05,0.05,0.05,0.05,0.15,0.15,0.15,0.15,0.15  ]
     p1 = [1/10 for i in range(len(p))] # j-1/10 <= U< j/10
     p2 = [0,0,0,0,0,.2,.2,.2,.2,.2]  # (j-1)/5 <=U < j/5
     #pj = 0.5*0.1 = 0.05....j:1→5    alpha =0.5  p1=0.1
@@ -582,7 +583,7 @@ def ejemplo4f_composicion(N=20):
         U1 = generar_un_aleatorio()
         U2 = generar_un_aleatorio()
         if U1 < alpha :
-            Y = math.floor(10*U1) + 1
+            Y = math.floor(10*U2) + 1
             X.append(Y)
         else:
             Y = math.floor(5*U2) + 6
@@ -595,6 +596,7 @@ def ejemplo4f_composicion(N=20):
             if i == e:
                 f[e-1] = f[e-1] + 1
                 break
+    print(f)
     f = np.array(f)
     f = f/N
     print(f"p: {p}")
@@ -603,6 +605,520 @@ def ejemplo4f_composicion(N=20):
     plt.subplot(1,2,1);plt.bar(x,p)
     plt.subplot(1,2,2);plt.bar(x,f)
     plt.show()
+
+def ejercicio1_capitulo4(n=500): 
+    p = [1/3 , 2/3]
+    x = [1,2]
+    F = []  
+    for i in range(len(p)):
+        suma = 0
+        for j in range(i):
+            suma = p[j]
+        F.append(suma + p[i])
+    X = []
+    for i in range(n):
+        U = generar_un_aleatorio()
+        for j in range(len(F)):
+            if U < F[0]:
+                X.append(x[0])
+                break
+            if F[j-1]<= U < F[j]:
+                X.append(x[j]) 
+                break
+    f = [0 for i in range(len(p))]
+    for e in X:
+        for j in range(len(x)): 
+            if e == x[j]:
+                f[j] = f[j] + 1
+                break
+    f = np.array(f)
+    f = f/n
+    print(f"p: {p}")
+    print(f"f: {f}") 
+    plt.subplot(1,2,1);plt.bar(x,p)
+    plt.subplot(1,2,2);plt.bar(x,f)
+    plt.show()
+
+def ejercicio2_capitulo4_generarX(p,x,N= 20):
+    if type(p) is not  list and type(x) is not list:
+        return 
+    F = []
+    n = len(p)
+    for i in range(n):
+        suma = 0
+        for j in range(i):
+            suma = suma + p[j]
+        F.append(suma + p[i])
+    #print(f"F: {F}")
+    #F son las acumuladas
+    #ahora transformada inversa
+    X = []
+    for i in range(N):
+        U = generar_un_aleatorio()
+        #print(f"U: {U}")
+        for j in range(n):
+            if U < F[0]:
+                X.append(x[0])
+                break
+            if F[j-1]<= U < F[j]:
+                X.append(x[j])
+                break
+    #print(X)
+    return X
+
+
+def ejercicio3_capitulo4():
+    p = [0.3 , 0.2 , 0.35 , 0.15 ]
+    x = [ 1, 2, 3 , 4 ]
+    X = ejercicio2_capitulo4_generarX(p,x)
+    print(X)
+
+def ejercicio4_capitulo4(n_experimentos=100):
+    # cartas 1 → 100 , se elige una si  sacada es i exito 
+    exitos = []
+    for e in range(n_experimentos):
+        P = [i + 1 for i in range (100)]
+        #print(P)
+        n = len(P)
+        for k in range (n-1 , -1 , -1):
+            # uniforme (j -1)/k <= U < j/k
+            # ent(k*U) + 1
+            U = generar_un_aleatorio()
+            I = math.floor(U*(k+1)) # P(I=i)=1/(k+1) i:0→k i/(k+1) <= U < i+1/(k+1)
+            P[k] , P[I] = P[I] , P[k] #Esto garantiza que: El valor 0 puede salir (cuando U ∈ [0, 1/(k+1))),El valor k también (cuando U ∈ [k/(k+1), 1)).Cada uno con probabilidad 1/(k+1)"""
+        print(P)
+        exits = 0
+        for i in range(n):
+            #print(f"P[i]: {P[i]}, i: {i + 1}")
+            if P[i] == i+1:
+                exits = exits + 1
+        exitos.append(exits)
+    exitos = np.array(exitos)
+    u = sum(exitos)/len(exitos)
+    var = 0
+    for e in exitos:
+        var+=((e - u)**2)
+    var /=len(exitos)
+    print(f"u: {u} , var: {var} ")
+
+def ejercicio5_capitulo4():
+    P = []
+    # j/n+1<= U < j+1/n+1
+    n = 100 
+    for k in range(n):
+        P.append(k+1)
+        U = generar_un_aleatorio()
+        I = math.floor((k+1)*U)
+        P[k] , P[I] = P[I] , P[k]
+    print(P)
+
+def ejercicio6_capitulo4(n=100):
+    N =10000
+    a = lambda t : e**(t/N)
+    suma = 0
+    for i in range(n):
+        U = generar_un_aleatorio()
+        #j/n+1 <= U< j+1/n+1    j <= n+1 U < j+1
+        x = math.floor(U*(n+1))
+        suma = suma + a(x)
+    print(f"suma aproximada: {suma}")
+    s = [a(i) for i in range(n)]
+    s = np.array(s)
+    S = sum(s)
+    print(f"suma real : {S}")
+
+def ejercicio7_capitulo4(n_experimentos=500):
+        x = [i+2 for i in range(11)]
+        n = len(x)
+        print(f"x: {x} , len(x): {len(x)}")
+        lanz = []
+        for exp in range(n_experimentos):
+            cuentas = [0 for i in range(11)]
+            lan = 0
+            flag = True
+            while(flag):
+                lan +=1
+                U1 = generar_un_aleatorio()
+                U2 = generar_un_aleatorio()
+                I1 = math.floor(U1*6) + 1
+                I2 = math.floor(U2*6) + 1
+                for e in x:
+                    if(I1 + I2 == e):
+                        cuentas[e-2]+=1            
+                        break
+                for e in cuentas:
+                    if e != 0:
+                        flag = False
+                    else:
+                        flag = True
+                        break
+            lanz.append(lan)
+        lanz = np.array(lanz)
+        u = sum(lanz)/len(lanz)
+        print(f"u : {u}")            
+def ejercicio8_capitulo4():
+    #a  = []       
+    print()
+
+def ejemplo5a_capitulo5_exponencial(n=50,lam=1):
+    F = lambda x,lam=lam: 1 -e**-(lam*x) 
+    #U = F(X) = 1-e**x ,despejando x = -log(1-U) ~ -log(U) 
+    X = []
+    for i in range(n):
+        U = generar_un_aleatorio()
+        x = -np.log(U)/lam
+        X.append(x)
+    n_ = np.arange(0,n)
+    plt.subplot(1,2,1);plt.plot(n_,X,'o-')
+    plt.show()
+
+def observacion_capitulo5_generacion_poisson(n=50,lam = 1,T=1):
+    #N(1) = Max{suma Xi <= 1} los xi son exponenciales xi = -log(Ui)/lam
+    #max suma log(Ui)>=-lam    ; ese 1 puede ser un T cualquiera
+    #max log(U1....Un)>=-lam
+    #max u1...un >= e**-lam
+    # los n cumplen hasta que no cumple 
+    #N = min {u1..un < e**-lam} - 1
+    X = []
+    for i in range(n):
+        prod_U = 1 
+        i = 0
+        while True:
+            Ui = generar_un_aleatorio()
+            prod_U= prod_U * Ui
+            i = i + 1
+            if prod_U < e**-(lam*T):
+                X.append(i - 1)
+                break
+    print(f"X: {X}")
+
+def ejemplo5c_capitulo5_generar_gamma(n=50,lam=1):
+     # gamma X = -log(u1 u2 u3...)/lambda
+    prod_U = 1
+    for i in range(n):
+        Ui = generar_un_aleatorio()
+        prod_U = prod_U * Ui
+    X = -np.log(prod_U)/lam
+    print(f"gamma X: {X}")
+    return X
+
+def ejemplo5c_capitulo5_generar_exponenciales(n=50,lam=1):
+    U1 = generar_un_aleatorio()
+    U2 = generar_un_aleatorio()
+    t = -np.log(U1*U2)/lam
+    U3 = generar_un_aleatorio()
+    X = t*U3
+    Y = t - X
+    print(f"exponenciales X: {X}, Y: {Y}")
+
+generar_gamma = ejemplo5c_capitulo5_generar_gamma
+
+def ejemplo5c_capitulo5_generar_exponencial(n=100,lam=1):
+    t = generar_gamma(n= n,lam = lam)
+    U = []
+    for i in range(n-1):
+        u = generar_un_aleatorio()
+        U.append(u)
+    U.append(0)
+    U.append(1)
+    print(U)
+    U = np.array(U)
+    U.sort()
+    print(U)
+    X = []
+    for i in range(1,n+1):
+        x = t*(U[i] - U[i-1])
+        X.append(float(x))
+    print(f"X: {X}")
+    n_ = np.arange(1,n+1)
+    plt.subplot(1,2,1);plt.plot(n_,X)
+    f = 1-e**(-lam*Xn)
+    plt.show()
+
+def ejemplo5d_capitulo5_aceptacion_rechazo(n=10):
+    f = lambda x:20*x*(1-x)**3
+    g = lambda x:1
+    #f/g = 20*x*(1-x)**3 ; 20*(1-x)**3 - 20*x*3*(1-x)**2 ; 20*(1-x)**2(1-x-3*x) , es 0 en x=1/4
+    #f/g (1/4) = 135/64
+    c = f(1/4)/g(1/4)
+    X = []
+    for i in range(n):
+        U1 = generar_un_aleatorio()
+        U2 = generar_un_aleatorio()
+        if U2 <= f(U1)/(c*g(U1)):
+            X.append(U1)
+    print(f"X: {X}")   
+    X = np.array(X)
+    X_ord = np.sort(X)
+    F_emp = np.arange(1,len(X_ord)+1)/len(X_ord) #1/n 2/n 3/n  .. 1  cada (Xi,i/n) Femp(Xi)=P(X<=Xi)~i/n es la acumulada
+    n_ = np.linspace(0,1,100)
+    F = np.cumsum(f(n_))
+    F = F/F[-1]  
+    plt.subplot(1,2,1);plt.plot(X_ord,F_emp)
+    plt.subplot(1,2,2);plt.plot(n_,F)
+    plt.show() 
+
+def ejemplo5d_capitulo5_aceptacion_rechazo_g2x(n=100):
+    f = lambda x:20*x*(1-x)**3
+    g = lambda x: 2*x
+    # f/g  = 10*(1-x)**3   derivando -30(1-x)**2  xcritico= 1 c =f/g(1) =  0, pero el maximo seria en 0 c=10
+    c = 10
+    G = lambda x: x**2
+    # u = x**2    x=u**1/2
+    X = []
+    for i in range(n):
+        U1 = generar_un_aleatorio()
+        Y = U1**.5
+        U2 = generar_un_aleatorio()
+        if U2 <= f(Y)/(c*g(Y)):
+            X.append(Y)
+    print(X)
+
+def ejemplo5e_capitulo5_generar_gamma(n=10):
+    print("operativo")
+
+def generacion_poisson_homogeneo_capitulo5(n = 10,lam = 1,T = 10):
+    for i in range(n):
+        t = 0; I = 0
+        S = []
+        while True:
+            U = generar_un_aleatorio()
+            t = t -float(np.log(U))/lam 
+            if t > T :
+                break
+            I = I + 1 ; S.append(t)
+        print(S[1:len(S)-1])
+        print(I-1)
+
+def proceso_poisson_y_gamma_capitulo2():
+    #ocurren eventos en tiempos aleatorios y sea N(t) el numero de eventos que ocurren en [0,t]
+    #Estos eventos constituyen un proceso de poisson si 
+    #a) N(0) = 0
+    #b) en intervalos distintos el numero de eventos son independientes
+    #c) la distribucion del numero de eventos depende de la longitud del intervalo no de la posicioon 
+    #d) la probabilidad P(N(h) = 1 )  = lambda* h cuando h (longitud del intervalo ) decrece 
+    #e) la probabilidad P(N(h) >= 2) = 0  que ocurra mas de 1 evento es nulo
+    """explicacion detallada:
+    teneemos el intervalo de tiempo [0,t] lo dividimos en subintervalos 
+        Δt = T/n   y hay un promedio de ocurrencia de λ ..
+        la condicion (b) incremento independiente establece que N(t) es independiente N(t+s)-N(t)
+         (c) el incremento estacionario establece que N(t+s) -N(t) es el mismo para todos los t
+         (d) en pequeños intervalos un evento ocurre con probabilidad λt, (e) mientras a probabilidad de 2 o mas es 0
+    Entonces dividimos el intervalo  la probabilidad de que ocurra 1 es λt/n no ocurra 1 - λt/n
+    la probabilidad de que suceda dos o mas es 0 entonces podemos modelarlo mediante bernoulli
+            1 si ocurre un evento en interval i
+    Xi = { 
+            0 si no ocurre 
+    P(Xi = 1) = λt/n
+    El numero total de eventos hasta t es N(t) = X1 +X2...Xn , una bernoulli con p=λt/n
+    n bernoullis independientes hacen una binomial
+    ahora cuando  n aumenta B(n,λt/n) → Poisson(λam = np = nλt/n = λt)
+    Si P(N(t)>=2) no fuera 0 , no los Xi = ocurrencia de evento en el intervalo i no podria modelarse como
+            1 , si ocurre
+    Xi = {
+            0   si no ocurre, luego estas son bernoullis , la suma de bernoullis → binomial → poisson cuando n grande
+     """
+def proceso_poisson_no_homogeneo_capitulo2():
+    # una de las debilidades del proceso de poisson homogeneo es que los eventos tienen la misma probabilidad 
+    # en todos los intervalos del mismo tamaño, eliminar el incremento estacionario N(t+s) -N(t) ya no es la misma en todos los intervalos
+    # Si los eventos ocurren de manera aleatoria N(t) eventos, entonces se constituye un proceso de poisson 
+    # con funcion de intensidad   λ(t) si :
+    #a) N(0) = 0
+    #b) los numero de eventos en intervalos distintos es independiente
+    #c) lim h→0 P(exactamente 1 evento entre t y t+h)/h = λ(t)
+    #d) lim h→0 P(dos o mas en t t+h )/h  = 0 
+    """ con m(t) = integral λ(t)dt
+    N(t+s) - N(t) es una poisson con media m(t+s) - m(t)
+    
+    Los eventos ocurren de acuerdo con un proceso poisson homogeneo con tasa  λ
+    en t,t+h el numero de eventos N(t+h) - N(t) es una poisson con media λh
+
+    se introduce p(t) , cada evento que ocurre en el instante t se cuenta o no con p(t)
+    
+    en un intervalo pequeño  t,t+h la probabilidad de que ocurra un evento es λh
+    si cada evento se cuenta con p(t)
+    la probabilidad de que ocurra y ademas sea contado es 
+    P(1 evento contado [t,t+h]) = λp(t)
+    
+    la nueva intensidad es u(t) = λp(t) 
+
+    m(t) = numero esperado de eventos contados hasta t
+    integral λ p(s)ds  0 → t
+
+    si p(t) = 1       u(t) = λ  tenemos el poisson homogeneo
+
+    """
+def lambda_(t):
+    if 0 <= t <=5:
+        return t/5
+    else:
+        if 5<t<=10:
+            return 1 + 5*(t-5)
+
+def generacion_poisson_no_homogeneo_captitulo5(n=10,lam=1,T=10):
+    #queremos simular las primeras  T unidades de tiempo de un proceso de poisson
+    #con funcion de intensidad  λ(t) , en el metodo de adelgazamiento se elige  λ 
+    # tal que  λ(t) <=  λ   para t<=T
+    # como en el caso del homogeno se genera el tiempo  de razon  λ  , y la aceptasmo con probabilidad
+    #  λ(t)/ λ =p(t) se reduce la tasa de eventos dividiendo entre la tasa maxima  λ
+    l_max = lambda_(10)
+    for i in range(n):
+        t = 0 ; I = 0
+        S = []
+        while True:
+            U1 = generar_un_aleatorio()
+            t = t -float(np.log(U1))/lam
+            if t > T:
+                break
+            U2 = generar_un_aleatorio()
+            if U2 <= (lambda_(t)/l_max):
+                I = I + 1
+                S.append(t) 
+        print(f"simulacion: {i+1}")
+        print(f"I : {I}")
+        print(f"tiempos: {S}\n\n")
+
+"""se requiere la generacion de mecanismos estocasticos
+para ver el flujo del modelo en el tiempo
+hay ciertas cantidades que se quieren estudiar
+pero como el modelo se vuelve compleja no hay una forma segura de calcular esas cantidades
+De modo que se elabora un "marco general" , formulado en torno a "eventos discretos"
+Metodo de simulacion  con eventos discretos
+
+los elementos fundamentales para simulacion por eventos discretos son 
+variables y eventos, se tendra un seguimientosde de ciertas variables
+-variable tiempo , tiempo que ha transcurrido
+-vatriable de conteo , numero de veces que ciertos eventos han ocurrido
+-variable de estado del sistema , estado del sistema en el instante t
+En todos los modelos de cola los clientes llegan de acuerdo a un poisson no homogeneo
+con una funcion de intensidad l(t)
+aplicamos la subrutina vista para generar el valor de Ts
+ Ts definida como el tiempo 
+de la primera llegada despues del instante s
+    t = s
+    U1
+    t = t -log(U)/l
+    si U2 <= l(t)/l_max   Ts = t fin
+    generar U1....
+"""
+#PROBLEMA DE REPARACION
+
+""" un sistema de n maquinas esta funcionando , se tienen algunas maquinas de respuestos
+si una se descompone se reemplaza  y se envia al taller, donde solo una persona repara una a una
+una vez reparada queda disponible como repuesto lista para cuando surja la necesidad
+todos los tiempos de reparacion tienen distribucion comun G
+Desde que empieza a trabajar el tiempo que funciona hasta descomponerse es una variable aleatoria
+independiente de las anteriores, con una funcion de distribucion F
+
+el sistema falla cuando una maquina se descompone y no hay repuestos
+si al inicio hay n + s maquinas en buen estado
+n se ponen a trabajar y s quedan como repuestos
+queremos simular el sistema para aproximar E(T) donde T es el tiempo en que falla
+se usara
+variable de tiempo t
+variable de sistema r:el numero de maquinas descompuestas en el instante t
+
+OCURRE UN EVENTO si una maquina se descompone
+cuando una maquina es reparada
+para saber cuando ocurre el siguiente evento se necesita llevar un registro 
+de los instantes en los cuales fallan las maquinas que estan en uso y el instante 
+en que son reparadas
+Lista de eventos t1<=t2<=....<=tn,t*
+t son los tiempos de descompostura de las n maquinas y t* es el tiempo en que
+la maquina en reparacion vuelve a funcionar, si no hay maquinas en reparacion t* = inf
+para comenzar 
+Inicializacion
+    t = 0 
+    r = 0
+    t* = inf
+    X1,X2...variables aleatorias independientes con distribucion F.ordenamos 
+    estos valores para que ti sea el i-esimo menor i=1...n
+    sea t1,...tn,t*
+Actualizacion
+caso 1 t1 < t*
+    t = t1
+    r = r + 1 (pues ha fallado otra maquina)
+    si r = s + 1 , detener y reunir datos T=t (s + 1 descompuestas no hya repuesto)
+    si r < s + 1 , generar X con distribucion F,esta variable representa el tiempo
+                    de trabajo del repuesto que entrara en funciones 
+    ahora reordenamos t2,t3...t + X sea ti el i-esimo menor de ellos i:1→n
+    si d= 1 generar Y con funcion G  
+    y hacer t* = t + Y ,pues la maquina que acaba de fallar es la unica descompuesta y se
+    comienza a reparar de inmediato, Y sera su tiempo de reparacion y su reparacion
+    concluye en el tiempo t + Y
+
+caso 2 t*<=t1
+    t = t*
+    r = r - 1
+    si r>0 generar Y con funcion G , es el tiempo de reparacion de la que acaba
+    de entrar a servicio  y
+    t* = t + Y
+    si r = 0 t* =inf
+
+cada vez que nos detenemos (r = s + 1) concluye la ejecucion , la salida es 
+el tiempo de fallo T, reiniciamos y simulamos de nuevo
+una k simulaciones de modo que las salidas sean T1 T2 ...Tk , con k variables independientes
+cada una representa el tiempo de fallo, su promedio es la estimacion de E(T)
+"""
+def generar_u_aleatorio(m=2**35-31,a=5**5,c=100000007):
+    N = 1000
+    seed = (time_ns()*104729)%m
+    U = (a * seed + c ) % m
+    u = []
+    u.append(U)
+    for i in range(N):
+        Ui = (u[-1] * a + c) % m
+        u.append(Ui)
+    u = np.array(u)
+    u = u/m
+    return float(u[-1])
+
+def problema_de_reparacion(N=10,lam=1):
+    T = []
+    for i in range(N):
+        t = 0 ; des = 0; t_re =  float('inf'); re = 2
+        n = 10
+        X = []
+        for i in range(n):
+            U = generar_u_aleatorio() 
+            x = -float(np.log(U))/lam
+            X.append(x)  
+        X = np.array(X) 
+        t_ord = np.sort(X)
+        X = X.tolist() 
+        t_ord = t_ord.tolist()
+        print(f"t_fallos{t_ord}")
+        while True:
+            t1 = t_ord[0]
+            if t1 < t_re : # caso 1
+                t = t1 ; des = des + 1
+                t_ord.pop(0)
+                if des == re + 1: # porque cuando hay descompostura sale 1 inmediatamente de respuestos
+                    T.append(t)
+                    break
+                if des < re + 1:
+                    U = generar_u_aleatorio()
+                    x = -float(np.log(U))/lam
+                    t_ord.append(t + x) # porque en el futuro fallará
+                    t_ord = np.array(t_ord)
+                    t_ord = np.sort(t_ord)
+                    t_ord = t_ord.tolist()
+                if des == 1 : 
+                    U = generar_u_aleatorio()
+                    Y = -float(np.log(U))/lam
+                    t_re = t + Y 
+            elif t_re <= t1: #caso 2
+                t = t_re ; des = des - 1
+                if des > 0 :
+                    U = generar_u_aleatorio()
+                    Y = -float(np.log(U))/lam
+                    t_re = t + Y
+                if des == 0:
+                    t_re = float('inf')
+    print(f"T:  {T}")
+    T = np.array(T)
+    e = sum(T)/len(T)
+    print(f"esperanza {e} ")
 
 if __name__=='__main__':
     """n = int(sys.argv[1])
@@ -638,4 +1154,22 @@ if __name__=='__main__':
     #generacion_binomial43()
     #ejemplo4e_aceptacion_rechazo()
     #print(generar_un_aleatorio())+
-    ejemplo4f_composicion()
+    #ejemplo4f_composicion()
+    #ejercicio1_capitulo4()
+    #p = [0.3 , 0.2 , 0.35 , 0.05 , 0.10 ]
+    #x = [2 , 3 , 6 , 7 , 9 ]
+    #ejercicio2_capitulo4_generarX(p,x,N=30)
+    #ejercicio3_capitulo4()
+    #ejercicio4_capitulo4()  
+    #ejercicio5_capitulo4()
+    #ejercicio6_capitulo4()
+    #ejercicio7_capitulo4()
+    #ejemplo5a_capitulo5_exponencial()
+    #observacion_capitulo5_generacion_poisson()
+    #ejemplo5c_capitulo5_generar_gamma()
+    #ejemplo5c_capitulo5_generar_exponencial()
+    #ejemplo5d_capitulo5_aceptacion_rechazo()
+    #ejemplo5d_capitulo5_aceptacion_rechazo_g2x()
+    #generacion_poisson_homogeneo_capitulo5()
+    #generacion_poisson_no_homogeneo_captitulo5()
+    problema_de_reparacion()
