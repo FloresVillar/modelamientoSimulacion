@@ -978,7 +978,9 @@ def generacion_poisson_no_homogeneo_captitulo5(n=10,lam=1,T=10):
         print(f"I : {I}")
         print(f"tiempos: {S}\n\n")
 
-"""se requiere la generacion de mecanismos estocasticos
+"""
+la generacion de un modelo probabilistico 
+se requiere la generacion de mecanismos estocasticos
 para ver el flujo del modelo en el tiempo
 hay ciertas cantidades que se quieren estudiar
 pero como el modelo se vuelve compleja no hay una forma segura de calcular esas cantidades
@@ -1073,21 +1075,26 @@ def generar_u_aleatorio(m=2**35-31,a=5**5,c=100000007):
     u = u/m
     return float(u[-1])
 
-def problema_de_reparacion(N=10,lam=1):
-    T = []
+def problema_de_reparacion(N=500,lam_de=1,lam_re=0.25):
+    T = [] 
+    Tsimulaciones = []
     for i in range(N):
-        t = 0 ; des = 0; t_re =  float('inf'); re = 2
+        #print(f"\nsimulacion: {i+1}")
+        t = 0  
+        des = 0 
+        t_re =  float('inf') 
+        re = 4
         n = 10
         X = []
         for i in range(n):
             U = generar_u_aleatorio() 
-            x = -float(np.log(U))/lam
-            X.append(x)  
+            x = -float(np.log(U))/lam_de
+            X.append(x)    
         X = np.array(X) 
         t_ord = np.sort(X)
         X = X.tolist() 
         t_ord = t_ord.tolist()
-        print(f"t_fallos{t_ord}")
+        #print(",".join(f"{x:.4f}" for x in t_ord))
         while True:
             t1 = t_ord[0]
             if t1 < t_re : # caso 1
@@ -1098,30 +1105,53 @@ def problema_de_reparacion(N=10,lam=1):
                     break
                 if des < re + 1:
                     U = generar_u_aleatorio()
-                    x = -float(np.log(U))/lam
+                    x = -float(np.log(U))/lam_de
                     t_ord.append(t + x) # porque en el futuro fallará
                     t_ord = np.array(t_ord)
                     t_ord = np.sort(t_ord)
                     t_ord = t_ord.tolist()
                 if des == 1 : 
                     U = generar_u_aleatorio()
-                    Y = -float(np.log(U))/lam
+                    Y = -float(np.log(U))/lam_re
                     t_re = t + Y 
             elif t_re <= t1: #caso 2
                 t = t_re ; des = des - 1
                 if des > 0 :
                     U = generar_u_aleatorio()
-                    Y = -float(np.log(U))/lam
+                    Y = -float(np.log(U))/lam_re
                     t_re = t + Y
                 if des == 0:
                     t_re = float('inf')
-    print(f"T:  {T}")
-    T = np.array(T)
-    e = sum(T)/len(T)
-    print(f"esperanza {e} ")
+        falla = []
+        for i in range(len(T)):
+            suma = 0
+            for j in range(i+1):
+                suma = suma + T[j]
+            falla.append(suma/(i+1))
+        Tsimulaciones.append(falla[-1])
+        I = np.arange(len(T))
+        I = np.array(I)
+        I = I + 1
+        if i==0 or (i+1)%50==0:
+            plt.figure()
+            plt.bar(I,falla,width= 0.5,color='green') 
+            plt.xlabel("n-ésima simulacion")
+            plt.ylabel("media T-falla")
+            plt.title(f"{i+1} simulaciones") 
+            plt.pause(1.5)
+            plt.close()
+    print(f"i-esimo tiempo de falla promedio del sistema hasta la i-esima simulacion:")
+    print(",".join(f"{e:.4f}" for e in Tsimulaciones))
+    plt.bar(np.arange(len(Tsimulaciones)),Tsimulaciones,width=0.5,color="green")
+    plt.xlabel("n-ésima simulacion")
+    plt.ylabel("media T-falla")
+    plt.title(f"{i+1} simulaciones")
+    plt.show()
 
 if __name__=='__main__':
-    """n = int(sys.argv[1])
+    problema_de_reparacion()
+
+"""n = int(sys.argv[1])
     print(f"fac({n}) = {factorial(n)}")
     i = int(sys.argv[2])
     print(f"poission({i}) = {poisson_recursivo(i)}")
@@ -1172,4 +1202,3 @@ if __name__=='__main__':
     #ejemplo5d_capitulo5_aceptacion_rechazo_g2x()
     #generacion_poisson_homogeneo_capitulo5()
     #generacion_poisson_no_homogeneo_captitulo5()
-    problema_de_reparacion()
