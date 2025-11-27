@@ -839,21 +839,22 @@ def ejemplo5d_capitulo5_aceptacion_rechazo(n=10):
     f = lambda x:20*x*(1-x)**3
     g = lambda x:1
     #f/g = 20*x*(1-x)**3 ; 20*(1-x)**3 - 20*x*3*(1-x)**2 ; 20*(1-x)**2(1-x-3*x) , es 0 en x=1/4
+    # para determinar c tal quee se cumpla f/g<=c  en este caso 
     #f/g (1/4) = 135/64
     c = f(1/4)/g(1/4)
     X = []
     for i in range(n):
-        U1 = generar_un_aleatorio()
-        U2 = generar_un_aleatorio()
+        U1 = generar_un_aleatorio()  #como g(x)=1 en 0,1 tiene distribucion uniforme g(x)=1/(b-a) = 1 en 0,1 uniforme entonces solo se generar u1 uniforme y cumple
+        U2 = generar_un_aleatorio() 
         if U2 <= f(U1)/(c*g(U1)):
             X.append(U1)
     print(f"X: {X}")   
     X = np.array(X)
-    X_ord = np.sort(X)
+    X_ord = np.sort(X)              # X=[0.2,0.5,0.7] F_emp = 1/3 2/3 3/3 esto es 1de3 <=0.2   2de3 <=0.5 3de3 <=0.7 
     F_emp = np.arange(1,len(X_ord)+1)/len(X_ord) #1/n 2/n 3/n  .. 1  cada (Xi,i/n) Femp(Xi)=P(X<=Xi)~i/n es la acumulada
     n_ = np.linspace(0,1,100)
-    F = np.cumsum(f(n_))
-    F = F/F[-1]  
+    F = np.cumsum(f(n_)) # suma de fi hasta i
+    F = F/F[-1]   #luego normalizamos
     plt.subplot(1,2,1);plt.plot(X_ord,F_emp)
     plt.subplot(1,2,2);plt.plot(n_,F)
     plt.show() 
@@ -864,7 +865,7 @@ def ejemplo5d_capitulo5_aceptacion_rechazo_g2x(n=100):
     # f/g  = 10*(1-x)**3   derivando -30(1-x)**2  xcritico= 1 c =f/g(1) =  0, pero el maximo seria en 0 c=10
     c = 10
     G = lambda x: x**2
-    # u = x**2    x=u**1/2
+    # u = x**2    x=u**1/2  se usa la inversa para tener Y ~ G 1
     X = []
     for i in range(n):
         U1 = generar_un_aleatorio()
@@ -978,6 +979,52 @@ def generacion_poisson_no_homogeneo_captitulo5(n=10,lam=1,T=10):
         print(f"I : {I}")
         print(f"tiempos: {S}\n\n")
 
+pi = np.pi
+e= np.e
+
+def ejemplo5f_capitulo5_generacion_normal(n=5000):
+    f = lambda x:  (2/(2*pi)**.5)*e**((-x**2)/2)
+    g = lambda x: e**(-x)
+    f_g = lambda x: ((2/pi)**0.5)*e**(x-(x**2)/2)
+    # maximo en c =max f/g  para x=1 f/g(1) = (2e/pi)**0.5
+    c = f_g(1)
+    X = []
+    for i in range(n):
+        u1 = generar_u_aleatorio() #Y ~g u= e**-x  Y = -log(u1)
+        Y = -np.log(u1)
+        u2 = generar_u_aleatorio()
+        if u2 <= f_g(Y)/c:
+            X.append(Y)
+    X = np.array(X)
+    X_ord = np.sort(X)
+    F_cdf = np.arange(1,len(X_ord)+1)/len(X_ord)
+    plt.subplot(1,2,1);plt.plot(X_ord,F_cdf)
+    F_ = np.linspace(0,1,100)
+    F_d = np.cumsum(f(F_))
+    F_d=F_d/F_d[-1]
+    plt.subplot(1,2,2);plt.plot(F_,F_d)
+    plt.show()
+
+def ejercicio1_capitulo5():
+    f = lambda x : (1/(e - 1))*e**x   # en 0<x<1
+    # hallar la acumulada e**x/c  
+    F = lambda x : (1/(e - 1))*e**x
+    # y c = e**x
+    # log(yc) = x
+    # log(uc) = F-1
+    U = rd.uniform(0,1)
+    x = np.log(U*(e - 1)) 
+    print(f"x es : {x}")
+
+def ejercicio2_capitulo5():
+    f1 = lambda x : (x-2)/2 #  2 a 3
+    f2 = lambda x :(2-x/3)/2 # 3 a 6
+    F1 = lambda x : ((x-2)**2)/4  # 4y**.5  + 2
+    F2 = lambda x : 0.25 + ((2-x/3)**2)*-.75 # (((y - 0.25)*-0.75)**.5-2)*-3
+    X1 = (4*np.uniform(0,1))**.5 + 2
+    X2 = (((U - 0.25)*-0.75)**.5-2)*-3
+    print(f"x1={x1} , x2={x2}")
+
 """
 la generacion de un modelo probabilistico 
 se requiere la generacion de mecanismos estocasticos
@@ -1075,9 +1122,14 @@ def generar_u_aleatorio(m=2**35-31,a=5**5,c=100000007):
     u = u/m
     return float(u[-1])
 
+generar_u_aleatorio = lambda : rd.uniform(0,1)  #los resultados son similares
+
 def problema_de_reparacion(N=500,lam_de=1,lam_re=0.25):
-    T = [] 
+    X = [] 
     Tsimulaciones = []
+    media = [] ; media.append(0)
+    S_2 = [] ; S_2.append(0)
+
     for i in range(N):
         #print(f"\nsimulacion: {i+1}")
         t = 0  
@@ -1085,14 +1137,14 @@ def problema_de_reparacion(N=500,lam_de=1,lam_re=0.25):
         t_re =  float('inf') 
         re = 4
         n = 10
-        X = []
+        T_f = []
         for i in range(n):
             U = generar_u_aleatorio() 
             x = -float(np.log(U))/lam_de
-            X.append(x)    
-        X = np.array(X) 
-        t_ord = np.sort(X)
-        X = X.tolist() 
+            T_f.append(x)    
+        T_f = np.array(T_f) 
+        t_ord = np.sort(T_f)
+        T_f = T_f.tolist() 
         t_ord = t_ord.tolist()
         #print(",".join(f"{x:.4f}" for x in t_ord))
         while True:
@@ -1101,7 +1153,7 @@ def problema_de_reparacion(N=500,lam_de=1,lam_re=0.25):
                 t = t1 ; des = des + 1
                 t_ord.pop(0)
                 if des == re + 1: # porque cuando hay descompostura sale 1 inmediatamente de respuestos
-                    T.append(t)
+                    X.append(t)
                     break
                 if des < re + 1:
                     U = generar_u_aleatorio()
@@ -1123,13 +1175,13 @@ def problema_de_reparacion(N=500,lam_de=1,lam_re=0.25):
                 if des == 0:
                     t_re = float('inf')
         falla = []
-        for i in range(len(T)):
+        for i in range(len(X)):
             suma = 0
             for j in range(i+1):
-                suma = suma + T[j]
+                suma = suma + X[j]
             falla.append(suma/(i+1))
         Tsimulaciones.append(falla[-1])
-        I = np.arange(len(T))
+        I = np.arange(len(X))
         I = np.array(I)
         I = I + 1
         if i==0 or (i+1)%50==0:
@@ -1140,6 +1192,16 @@ def problema_de_reparacion(N=500,lam_de=1,lam_re=0.25):
             plt.title(f"{i+1} simulaciones") 
             plt.pause(1.5)
             plt.close()
+        # llamar a parar_ahora()
+        if(i>0):  # se modifica los i de las divisiones para guardar relacion con el algoritmo, los indices de media[ ] y Var[] no son relevantes en cuanto al algoritmo mas que para acceder de acuerdo a la indexacion
+            mediai = media[i-1] + (X[i] - media[i-1])/(i+2) # en la formula se va desde 2 entonces como estamos en 1 añadimos 2, mismo analisis abajo 
+            media.append(mediai)
+            S_i = (1-1/(i+1))*(S_2[i-1])**2 + (i+2)*(media[i]-media[i-1])**2
+            S_2.append(S_i)
+            d = 0.1/1.96 #H/Z1-alpha/2  alpha =0.05 entonces P(diferencia>Z1-alpha/2S/**.5) =0.05
+            if (S_2[i]**0.5)/i**0.5 < d and i > 29:
+                print(f"la media de fallo es : {media[i]} en la i-esima simulacion {i+1}")
+                break
     print(f"i-esimo tiempo de falla promedio del sistema hasta la i-esima simulacion:")
     print(",".join(f"{e:.4f}" for e in Tsimulaciones))
     plt.bar(np.arange(len(Tsimulaciones)),Tsimulaciones,width=0.5,color="green")
@@ -1148,9 +1210,131 @@ def problema_de_reparacion(N=500,lam_de=1,lam_re=0.25):
     plt.title(f"{i+1} simulaciones")
     plt.show()
 
-if __name__=='__main__':
-    problema_de_reparacion()
+def parar_ahora(T):
+    print("")
 
+
+""" 
+capitulo 7: 
+a misulacion produce una una variable aleatorio con valor esperado theta que 
+es nuestra cantidad de interes.
+otra simulacion independiente produce una variable aleatoria independiente de 
+la anterior con media theta, esto sigue k iteraciones
+todas variables aleatorias independientes de media theta
+el promedio de estos valores sirve como estimador de theta
+
+Pero en que valor de k nos detenemos, para esto es util observar la bondad 
+de nuestro estimador de theta
+estimadores bootstrap se usan para determinar la calidad de estimadores complejas
+
+la media muestral es un estimador insesgado de la media poblacional
+pues la esperanza de esta es la media poblacional precisamente
+E[x_media] = E[suma xi/n]=suma E[xi]/n =n *theta/n = theta
+
+Para determinar la bondad se analiza la esperanza del cuaadrado de la diferencia de la media muestral
+y media poblacional E[(x_media - theta)**2]  = Var(x_media)  
+E[(x_media - theta)**2] =  Var(suma xi/n)
+                        = Var(suma xi)/n**2
+                        = suma Var xi/(n**2)
+                        =n sigma **2/ n**2
+                        = sigma**2/n
+x_media es la media muestral, y varianza sigma**2/n
+entonces la variable aleatorio no puede estar muchas distancias             
+sigma de theta entonces x_media es un buen estimador de theta cuando (sigma**2/n)**.5
+es pequeño
+
+Pero generalmente no se conoce sigma**2/n entonces tambien lo estimamos
+como se estimo suma xi/n ~ theta
+                suma (xi - x_media)**2 /n 
+                S**2 = suma (xi -x_media) **2 / (n -1 )
+E[S**2] = sigma**2
+            suma (xi -x_media) **2 = suma xi**2 - n x_media**2
+            (n-1) E[S**2]   = E[suma xi**2] -n E[x_media**2]
+                            = nE[x1**2] -nE[x_media**2]
+                            
+usar E[y*2]= var[y] + (E[y])**2
+                            = n(Var(X1) + (E[X1])**2) -n(Var[X_media] + E[x_media]**2)
+                            = n(sigma**2 + theta**2)  -n(sigma**2/n  + theta**2)
+                            =(n-1)sigma**2
+                        lo que se queria
+S**2 es el estimador de sigma**2 
+generamos de manera aleatorio xi (variables aleatorias ) queremos theta = E[xi] 
+en que momento nos detenemos?
+elegimos un valor aceptable para la desviacion estandar
+d es la desviacion estandar de nuestro estimador x_media
+entonces podemos estar seguros (por ejemplo) 95% seguros de que x_media no difiere de theta
+en mas de 1.96d (DESIGUALADAD CHEBYSHEV)
+"""
+# Esta parte merece atencion
+#P(|x - theta|>csigma/n**.5) <=1/c**2
+# trabajar esa:  Z~|X-theta|/sigma/n**5 
+# P(|Z|>c)  P(Z>c o Z<-c) = 1-P(Z<c) + 1 - P(Z<c)
+#                         = 2(1-P(Z<c))
+#                         entonces si quremos que P(|X-theta|>csigma/n**5) = 0.05
+#                         = 2(1-P(Z<c))=0.05
+#                         = 1-P(Z<c) =0.025
+#                         = 0.975=P(Z<c)
+#                         = de la tabla normal c = 1.96
+#  ENTONCES la probabilidad de: X-theta por mas de c sigma/n**.5 es 0-05
+#                              P( |X-theta|> 1.96 sigma/n**.5 ) =0.05 
+#                              1 - P(|X-theta|< 1.96 sigma/n**.5 ) = 0.05
+#                                P(|X-theta|< 1.96 sigma/n**.5 ) = 0.95   
+#                               ESTO es que X no difiera de theta (que la diferencia) en mas de (sea menor) 1.96d es 0.95
+#                               el d es sigma/n**.5  ...
+#                               de la teoria 1.96d  d hace refencia a sigma/n**.5
+#                               pero en el algoritmo se hace S/n**.5 < d  →  P(|X-theta|<1.96S/n**.5<1.96sigma/n**.5) 
+#
+"""Entonces debemos seguir generando xi  para los cuales nuestra estimacion de la varianza del estimador (x_media)
+sea menor que un valor aceptable d. De todos modos S**2 no es buen estimador de sigma**2 
+para valores pequeños.
+Se recomienda:
+1. elegir d para la desviacion estandar
+2. Generar al menos 30 xi
+3. seguir generando  k valores,  y si S/k**0.5   <   d    
+4 la estimacion de theta   X_media = sumaxi/k
+
+entonces no se usa chebyshev directamente sino solo esa idea de que la variable 
+aleatorio no puede estar a distancias mayores a una desviacion de la media(theta)..
+y la desviacion del estimador x_media es desviacion /n**.5, pero como tambien se estima 
+la desviacion usamos la muestral S
+Entonces tenemos que nuestra distancia a la media deberia ser menor a d = 0.05 por ejemplo
+S/n***.5 < d detenemos la simulacion
+"""
+## 
+def ejemplo7a_capitulo7(): 
+    # 0.95 = (1-aplha) seguros entonces alpha = 0.05  Z1-alpha/2  = 1.96  d = H/Z1-apha/2 S/n**.5 < d   S/n**.5 < H/1.96
+    tiempos = []
+    lam = 1/30  # para el exponencial suponer que la media es 30 desde las 5
+    H = 15
+    z1_alpha2 = 1.96
+    d = H/z1_alpha2 
+    k = 0
+    tiempos.append(-np.log(generar_un_aleatorio())/lam)
+    theta = None
+    while True:
+        t = -np.log(generar_un_aleatorio())/lam
+        k = k + 1
+        tiempos.append(t)
+        _x_suma = 0
+        for e in tiempos:
+            _x_suma = _x_suma + e
+        _x = _x_suma/len(tiempos)
+        _var_suma = 0
+        for e in tiempos:
+            _var_suma = _var_suma + (_x - e)**2
+        _var = _var_suma / len(tiempos) - 1
+        S = _var**.5
+        k = len(tiempos)
+        if (k >= 30 and (S/k**.5 < d)):
+            theta = _x
+            print(f"theta buscado es f{theta}")
+            break
+
+if __name__=='__main__':
+    ejemplo7a_capitulo7()
+    #probleifma_de_reparacion()
+    #ejercicio1_capitulo5()
+    #ejemplo5f_capitulo5_generacion_normal
 """n = int(sys.argv[1])
     print(f"fac({n}) = {factorial(n)}")
     i = int(sys.argv[2])
@@ -1202,3 +1386,4 @@ if __name__=='__main__':
     #ejemplo5d_capitulo5_aceptacion_rechazo_g2x()
     #generacion_poisson_homogeneo_capitulo5()
     #generacion_poisson_no_homogeneo_captitulo5()
+     
