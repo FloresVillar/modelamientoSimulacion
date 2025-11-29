@@ -13,7 +13,7 @@ def factorial(n=5)->int:
     for i in range(1,n+1):
         prod = prod *i
     return prod
-e = np.e
+ 
 
 def poisson_recursivo(i=4,lam = 1):
     # Pj+1 = Pj \U03BB /(j+1)
@@ -75,7 +75,7 @@ def integral_aleatorio(n=256,g = lambda x: x**2):
     plt.plot(x,THETA)
     plt.show()
 
-def estimacion_pi(n=256):
+def ejemplo3a_capitulo3_estimacion_pi(n=256):
     U1 = generador_aleatorio_grande(N=n,semilla=731)
     U2 = generador_aleatorio_grande(N=n,semilla=867)
     k = 0
@@ -105,8 +105,7 @@ def ejercicio2_capitulo3():
     for i in range(1,11):
         xn = (5*X[-1]+ 7) % 200
         X.append(xn)
-    print(X)
-e = np.e
+    print(X) 
 def ejercicio3_capitulo3(n=500):
     #exp(e^x) x:0→1
     g = lambda x : e **(e**x)
@@ -979,8 +978,7 @@ def generacion_poisson_no_homogeneo_captitulo5(n=10,lam=1,T=10):
         print(f"I : {I}")
         print(f"tiempos: {S}\n\n")
 
-pi = np.pi
-e= np.e
+  
 
 def ejemplo5f_capitulo5_generacion_normal(n=5000):
     f = lambda x:  (2/(2*pi)**.5)*e**((-x**2)/2)
@@ -1302,7 +1300,7 @@ S/n***.5 < d detenemos la simulacion
 """
 ## 
 def ejemplo7a_capitulo7(): 
-    # 0.95 = (1-aplha) seguros entonces alpha = 0.05  Z1-alpha/2  = 1.96  d = H/Z1-apha/2 S/n**.5 < d   S/n**.5 < H/1.96
+    # 0.95 = (1-aplha) seguros entonces alpha = 0.05  Zalpha/2  = 1.96  d = H/Zapha/2 S/n**.5 < d   S/n**.5 < H/1.96
     tiempos = []
     lam = 1/30  # para el exponencial suponer que la media es 30 desde las 5
     H = 15
@@ -1322,16 +1320,323 @@ def ejemplo7a_capitulo7():
         _var_suma = 0
         for e in tiempos:
             _var_suma = _var_suma + (_x - e)**2
-        _var = _var_suma / len(tiempos) - 1
+        _var = _var_suma / (len(tiempos) - 1)
         S = _var**.5
         k = len(tiempos)
         if (k >= 30 and (S/k**.5 < d)):
             theta = _x
-            print(f"theta buscado es f{theta}")
+            print(f"theta buscado es f{theta} en la iteracion k : {k}")
+            break
+def detencion_bernoulli_capitulo7():
+    #x  ={0,1}
+    p = 0.3
+    q = 1 - p
+    X = [] 
+    H = 0.001   # ahora el theta no es timepo sino una probabilidad, margen maximo de la probabilidad
+    z1_alpha_2 = 1.96 # asumir alpha= 0.05 
+    d = H/z1_alpha_2
+    theta = None
+    while  True :
+        U =generar_un_aleatorio()
+        if U < p: 
+            x = 1
+            X.append(x)
+        else :
+            x = 0
+            X.append(x)
+        k = len(X)
+        _x_suma = 0
+        for e in X:
+            _x_suma = _x_suma + e
+        _x = _x_suma/len(X)
+        _var_suma = 0
+        if k>=30 and (_x*(1-_x)/k)**0.5 < d:
+            theta = _x
+            print(f"theta:{theta} en la iteracion:{k}" )
+            break
+
+def ejemplo7c_capitulo7_tiempo():
+    lam = 15
+    i = 0
+    k = 0
+    d = 0.001
+    theta = None
+    p = 0.46
+    lam_lleg = .25 # clientes cada hora → 15/60 min =0.25  
+    lam_ser =  1/3   # tasa 20 clientes por hora 
+    while True:
+        k = k + 1 
+        #dia 
+        T_llegadas = []
+        T = 0
+        for j in range(10):
+            T_llegadas.append(-np.log(rd.uniform(0,1))/lam_lleg)
+        T_llegadas = np.array(T_llegadas)
+        T_ord =np.sort(T_llegadas)
+        T_llegadas = T_ord.tolist() 
+        for ind in range(len(T_llegadas)):
+            t_ser = -np.log(rd.uniform(0,1))/lam_ser
+            T = T_llegadas[ind] + T - T_llegadas[ind] + t_ser
+            if T > 30 :
+                i = i + 1  
+                break     
+        _x = i/k
+        if ((_x *(1 - _x)/k)**.5 < d) and k>=30 :
+            theta = _x
+            print(f"el p :{_x} en la iteracion k: {k}")
+            break
+
+"""Intervalo de confianza
+    X1,X2,X3,X4....Xn variables aleatorios independientes, con distribucion comun
+    media theta  y varianza sigma**2 , _x es estimador de theta, no se espera que _x sea = theta
+    sino cercano con cierto grado de confianza.
+    Para obtener el intervalo se necesita la distribucion(aprox) del estimador
+    E(_x) = theta 
+    Var(_x) = E[(_x - theta)**2] = sigma**2/n
+    → _x - theta /sigma/n**.5  ~ N(0,1)  TEOREMA LIMITE CENTRAL
+    pero sigma no se conoce asi que se usa  S
+    _x -theta /S/n**0.5 ~ N(0,1)
+    0<alpha<1 P(Z>Zalpha)  = alpha 
+    Z1_alpha = -Zalpha 
+    en la figura   P( - Zapha/2 ----- <  Z <------Zalpha/2 ) = 1 -alpha
+    como Z = _x -theta /S/n**.5
+    → P(-Zalpha/2 < (_x - theta)/S/n**.5 < Zalpha/2) = 1 - alpha
+    → P( -Zalpha/2 < (theta - _x) /S/n**.5 < Zalpha/2 ) = 1 - alpha 
+    → P(-x -Zalpha/2 S /n**0.5 < theta < _x + Zalpha/2 S /n**.5) =  1 - alpha
+    tenemos que la media poblacional estarra dentro de _x +- Zalpha/2 S /n**.5 con probabilidad 1- alpha
+
+ """
+def intervalo_confianza_capitulo7():
+    alpha = 0.05 # alpha/2 = 0.025
+    Zalpha_2 =  1.96
+    k = 0
+    lam = 12 # 12 cada unidad de tiempo
+    l = 0.01
+    x = []
+    var = []
+    x.append(-np.log(generar_un_aleatorio())/lam)
+    IC = []
+    while True:
+        t = -np.log(generar_un_aleatorio())/lam
+        x.append(t)
+        _x_suma = 0
+        for e in x:
+            _x_suma += e
+        k = len(x)
+        _x = _x_suma / k
+        var_sum = 0
+        for e in x:
+            var_sum = var_sum + (e - _x)**2
+        S = (var_sum/ (k - 1))**0.5
+        IC.append(2 * Zalpha_2 * S/k**0.5)
+        if ( 2 * Zalpha_2 * S/k**0.5 < l) :
+            print(f"el intervalo de confianza IC:{IC[-1]} en iteracion k:{k}")
+            break 
+    eje_x = np.arange(1,len(IC) + 1 )
+    plt.subplot(1,2,1)
+    plt.plot(eje_x,IC)
+    plt.show()
+
+def observacion_tecnica_capitulo7_intervalo_bernoulli():
+    x = []
+    p = 0.1
+    Zalpha_2 = 1.96
+    IC = []
+    l = 0.01
+    while True:
+        U = generar_un_aleatorio()
+        if U < p:
+            x.append(1)
+        else:
+            x.append(0)
+        _x_sum = 0
+        for e in x:
+            _x_sum +=e
+        k = len(x)
+        _x = _x_sum/k
+        var = (_x)*(1-_x)
+        S = var**.5
+        IC.append(2*Zalpha_2 * S /k**0.5)
+        if (k>=30 and 2*Zalpha_2 * S /k**0.5<l):
+            print(f"el intervalo es IC:{IC[-1]} en la iteracion k:{k} theta_parametro:{_x}")
+            break
+    eje_x = np.arange(1,len(IC) + 1)
+    plt.subplot(1,2,1)
+    plt.plot(eje_x,IC)
+    plt.show()
+
+def ejercicio1_capitulo7_demostrar_algebraicamente():
+    """ suma (xi - _x) **2  =suma xi**2 -2xi_x + _x**2
+                            =suma xi**2 -2_x*sumaxi +_x**2 suma
+                            =sumaxi**2  -2_x*_x*n + _x**2*n
+                            =sumaxi**2  -2*n*_x**2 + n*_x**2
+                            =sumaxi**2  -n*_x**2
+    
+    """
+import subprocess
+
+def ejercicio2_capitulo7_demostracion_ejercicio1():
+    # X: xi tal que p(xi) = 1/n
+    # _x = E(X) = suma xi * 1/n 
+    # E(X**2) = suma xi**2 * 1/n 
+    # Var(X) = (xi -_x)**2/n = suma xi**2 /n - (suma xi/n)**2 
+    #                       = suma xi**2 /n  - _x**2
+    #          (xi - _x)**2 = n suma xi**2 /n - _x**2
+    #                       =suma xi**2       - n*_x**2  
+    print() 
+    
+def ejercicio3_capitulo7_media_varianza_recursivas():
+    print()
+    # _Xj+1 = _xj + (xj+1 -_xj)/(j + 1)
+    # _sj+1 **2   = (1 -1/j)sj **2 +(j + 1) (_Xj+1 -_xj)**2
+    x = [5,14,9]
+    print(f"x: {x}")
+    _x = [] ; _x.append(0) 
+    S = [] ; S.append(0) ; S.append(0)
+    for e in x:             #j + 1  = len(_x) , pues j_inicio = 0
+        _x.append(_x[-1] + (e - _x[-1])/len(_x))
+    for j in range(1,len(_x)-1):               
+        S.append( (1 - 1/j)*S[-1] + (j + 1)*(_x[j + 1] - _x[j])**2) 
+    print(f"medias _x {_x}")
+    print(f"varianzas S**2: {S}")
+### el codigo anterior queda corroborado con el ejercicio del libro
+"""
+    X0   X1  X2  X3                 4 elementos
+    0    5   ..   ..
+    0    0   ..   ..
+    S0   S1  S2  S3
+    j = 1     (1 -1)*0 + ( 2) * (_x[2] - _x[1])
+    y se corresponden en valores e indices
+    x: [5, 14, 9]
+medias _x [0, 5.0, 9.5, 9.333333333333334]   los valores del ejercico del libro
+"""
+import statistics as st
+normal = lambda:np.random.normal(0,1)
+
+def ejercicio4_capitulo7_generacion_normales():
+    #H = None
+    #1 - alpha = 0.95    alpha = 0.05   alpha/2 = .025  Zalpha2 = 1.96
+    d = .01  #H/Zalpha_2 
+    x = []
+    x.append(normal())
+    while True:
+        x.append(normal())
+        _x_sum = 0
+        for e in x:
+            _x_sum +=e
+        k = len(x)
+        _x = _x_sum/k
+        var = 0 
+        for e in x :
+            var = var + (e - _x)**2
+        var = var / (k - 1)
+        S = var**0.5
+        if k>=30 and S/k**.5 < d:   # 1/n**.5 < .1  1/.1**2 <n   99.99< n
+            print(f"theta .{_x} en la iteracion: {k}")
+            print(f"la varianza {var}")
+            break
+import math
+def ejercicio6_capitulo7_estimacion_integral():
+    g = lambda U : math.exp(U**2)
+    G = []
+    G.append(g(generar_un_aleatorio()))
+    d = 0.01
+    while True:
+        U = generar_un_aleatorio()
+        G.append(g(U))
+        sum= 0
+        for e in G:
+            sum +=e
+        k = len(G)
+        _x = sum/k
+        var = 0
+        for e in G:
+            var +=(e -_x)**2
+        var = var /(k-1)
+        S = var**.5
+        if k>=100 and S/k**.5< d:
+            print(f" theta es:{_x} en k:{k}")
+            break
+
+def ejercicio7_capitulo7_estimacion_esperanza():
+    x = [10, 11, 10.5, 11.5, 14, 8, 13, 6, 15,10, 11.5, 10.5, 12, 8, 16,5]
+    print(x)
+    _x = []
+    _x.append(0)
+    S  = []
+    S.append(0) ; S.append(0)
+    for e in x:
+        _x.append(x[-1] + (e  - x[-1])/len(_x))
+    print(f"_x :{_x}")
+    for j in range(1,len(_x)-1):
+        S.append((1-1/j)*S[-1]  + (j +1)*(_x[j +1 ]- _x[j])**2)
+    print(f"S: {S}")
+    for i in range(2,len(S)):
+        print(f"v : {(S[i]/(i+1))**0.5}")
+        if (S[i]/(i+1))**0.5 < 0.1:
+            print(f"S:{S[i]} en la iteracion {i+1}")
+            break
+def ejercicio8_capitulo7_estimacion_e():
+    # N = min{n suma ui > 1 }
+    #1 - alpha = 0.95    alpha=.05   Zalpha/2 = 1.96
+    N = []
+    for i in range(1000):
+        x = []
+        x.append(generar_un_aleatorio())
+        suma = x[-1]
+        while True:
+            x.append(generar_un_aleatorio())
+            suma += x[-1]
+            if suma > 1 :
+                n = len(x)
+                N.append(n)
+                break
+    suma = 0
+    for e in N:
+        suma +=e
+    k = len(N)
+    _x = suma/len(N)
+    var = 0
+    for e in N:
+        var +=(e - _x)**2
+    S = var**.5
+    lim_inf = _x - S * 1.96/k**.5 # _x +- S Zalpha/2 /n**.5
+    lim_sup = _x + S * 1.96/k**.5
+    print(f"el intervalo es : [ {lim_inf},{lim_sup} ] para e: {np.e}")
+
+def ejercicio10_capitulo7_estimacion_pi(): 
+    n = 0
+    k = 0
+    while True:
+        n = n + 1
+        a = (2*generar_un_aleatorio()-1)**2
+        b = (2*generar_un_aleatorio()-1)**2
+        if (a + b) <=1 :
+            k = k + 1
+        p = k/n
+        var = p*(1-p)
+        S = var**.5
+        Zalpha_2 = 1.96
+        d =0.01
+        if (n>=30 and 2*Zalpha_2 * S/n**.5 < d):  # Zalpha_2 = 1.96
+            lim_inf = p - Zalpha_2 * S/n**.5 
+            lim_sup = p + Zalpha_2 * S/n**.5
+            print(f"el [{4*lim_inf},{4*lim_sup}] en iteracion n:{n}")
             break
 
 if __name__=='__main__':
-    ejemplo7a_capitulo7()
+    ejercicio10_capitulo7_estimacion_pi()
+    #ejercicio8_capitulo7_estimacion_e()
+    #ejercicio7_capitulo7_estimacion_esperanza()
+    #ejercicio6_capitulo7_estimacion_integral()
+    #ejercicio4_capitulo7_generacion_normales()
+    #ejercicio3_capitulo7_media_varianza_recursivas()
+    #ejercicio2_capitulo7_demostracion_ejercicio1()
+    #observacion_tecnica_capitulo7_intervalo_bernoulli()
+    #intervalo_confianza_capitulo7()
+    #ejemplo7c_capitulo7_tiempo()
+    #detencion_bernoulli_capitulo7()
+    #ejemplo7a_capitulo7()
     #probleifma_de_reparacion()
     #ejercicio1_capitulo5()
     #ejemplo5f_capitulo5_generacion_normal
